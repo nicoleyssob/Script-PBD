@@ -1,0 +1,231 @@
+create database biblioteca;
+use biblioteca;
+
+create table unidade_atendimento(
+	codigo int check(codigo >= 1 and codigo <= 999) not null,
+    nome varchar(50) not null unique,
+    endereco varchar(200) not null,
+    id_bibliotecaria int not null,
+    foreign key(id_bibliotecaria) references bibliotecaria(matricula), #R4
+    unique(id_bibliotecaria),
+    primary key(codigo)
+);
+
+create table telefone_unidade_multi(
+	codigo int not null,
+    telefone int(10) not null unique check(telefone between 1000000000 and 9999999999),
+	foreign key (codigo) references unidade_atendimento(codigo),
+    primary key(codigo, telefone)
+);
+
+create table unidade_academica(
+	codigo varchar(4) not null,
+    nome varchar(50) not null unique,
+    primary key(codigo)
+);
+
+create table cursos(
+	codigo int not null check(codigo >= 1 and codigo <= 999),
+    nome varchar(50) not null unique,
+    primary key(codigo)
+);
+
+create table disciplina(
+	codigo char(7) not null,
+    nome varchar(50) not null,
+    primary key(codigo)
+);
+
+create table atendente(
+	matricula int not null check(matricula >= 1 and matricula <= 99999),
+    nome varchar(50) not null,
+    codigo_unid int not null,
+    foreign key(codigo_unid) references unidade_atendimento(codigo), #R3
+    primary key(matricula)
+);
+
+create table bibliotecaria(
+	matricula int not null check(matricula >= 1 and matricula <= 99999),
+    nome varchar(50) not null,
+    primary key(matricula)
+);
+
+create table titulo(
+	isbn int not null check(isbn >= 1 and isbn <= 99999),
+    nomeTitulo varchar(100) not null,
+    areaPrincip varchar(100) not null,
+    assunto varchar(100) not null,
+    areaSecund varchar(100),
+    anoPublic int not null check(anoPublic >= 1000 and anoPublic <= 9999),
+    editora varchar(50) not null,
+    idioma char(1) not null,
+    prazo_emprestimo_prof int not null check(prazo_emprestimo_prof >= 1 and prazo_emprestimo_prof <= 99),
+    prazo_emprestimo_alun int not null check(prazo_emprestimo_alun >= 1 and prazo_emprestimo_alun <= 99),
+    num_max_renovacao int not null check(num_max_renovacao >= 0 and num_max_renovacao <= 99),
+    primary key(isbn)
+);
+
+create table titulo_livro(
+    isbn int not null check(isbn>=1 and isbn<=99999),
+    autor varchar(100) not null,
+    edicao int not null check(edicao>=1 and edicao<=999),
+    foreign key (isbn) references titulo(isbn),
+    primary key (isbn)
+);
+
+create table titulo_periodico(
+    isbn int not null check(isbn>=1 and isbn<=99999),
+    periodicidade varchar(15) not null check(periodicidade in('semanal', 'quinzenal', 'mensal', 'trimestral', 'quadrimestral', 'semestral', 'anual')),
+    tipo char(1) not null check(tipo in('J','R','B')),
+    foreign key (isbn) references titulo(isbn),
+    primary key (isbn)
+);
+
+create table copia_titulo(
+	isbn int(5) not null,
+    num_copia int(5) not null,
+    secao_copia int(4) not null,
+    estante_copia int(3) not null,
+    foreign key(isbn) references titulo(isbn), 
+    primary key(isbn, num_copia)
+);
+
+create table usuario_biblioteca(
+    codigo_usu int primary key not null check(codigo_usu >=1 and codigo_usu<=99999),
+    nome_usu varchar(50) not null,
+    identidade varchar(7) not null,
+    cpf varchar(11) not null,
+    endereco varchar(100) not null,
+    sexo char(1) not null check(sexo in('M','F')),
+    data_nascimento date not null,
+    estado_civil char(1) not null check(estado_civil in('C','S','D','V'))
+);
+
+create table usuario_telefone(
+	codigo_usu int not null,
+    telefone int not null unique check(telefone between 1000000000 and 9999999999),
+    primary key(codigo_usu, telefone),
+	foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
+);
+
+create table usuario_aluno(
+    codigo_usu int primary key not null check(codigo_usu>=1 and codigo<=99999),
+    foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
+);
+
+create table usuario_professor(
+    codigo_usu int primary key not null check(codigo_usu >=1),
+    foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
+);
+
+create table transacao(
+    numero_trans int primary key not null check(numero_trans>=1 and numero_trans <=999999999),
+    data_trans date not null,
+    horario_trans time not null,
+    tipo_transacao varchar(15) not null check(tipo_transacao in('emprestimo', 'devolucao', 'reserva', 'renovacao'))
+);
+
+create table emprestimo(
+    numero_trans int not null,
+    codigo_usu int not null,
+    primary key (numero_trans),
+    foreign key (numero_trans) references transacao(numero_trans),
+    foreign key(codigo_usu) references usuario_biblioteca(codigo_usu)
+);
+
+create table devolucao(
+    numero_trans int not null,
+    codigo_usu int not null,
+    primary key (numero_trans),
+    foreign key (numero_trans) references transacao(numero_trans),
+    foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
+);
+
+create table reserva(
+    numero_trans int not null,
+    codigo_usu int not null,
+    primary key (numero_trans),
+    foreign key (numero_trans) references transacao(numero_trans),
+    foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
+);
+
+create table renovacao(
+    numero_trans int not null,
+    codigo_prof int not null,
+    primary key (numero_trans),
+    foreign key (numero_trans) references transacao(numero_trans),
+    foreign key (codigo_prof) references usuario_professor(codigo_usu)
+);
+
+create table item_emprestimo(
+    numero_trans int not null,
+    numero_item int not null check(numero_item>=1 and numero_item<=9),
+    data_limite_dev date not null,
+    multa_atraso numeric(7,2),
+    multa_dano numeric(7,2),
+    primary key (numero_trans, numero_item),
+    foreign key (numero_trans) references emprestimo(numero_trans) #R6
+);
+
+create table data_renova( #R9
+	data_renavacao date not null,
+    num_trans int,
+    numero_trans int,
+    num_item int,
+    foreign key(num_trans) references renovacao(numero_trans),
+    foreign key(numero_trans, num_item) references item_emprestimo(numero_trans, numero_item),
+    primary key(num_trans, numero_trans, num_item)
+);
+
+create table data_reserva( #R10
+	data_reserv date not null,
+    numero_trans int,
+    isbn int,
+    num_copia int,
+    foreign key(numero_trans) references reserva(numero_trans),
+    foreign key(isbn, num_copia) references copia_titulo(isbn, num_copia),
+    primary key(numero_trans, isbn, num_copia)
+);
+
+alter table copia_titulo #R2
+add codigo int not null check(codigo>=1 and codigo<=999),
+add foreign key (codigo) references unidade_atendimento(codigo);
+
+alter table transacao #R5
+add matricula_atendente int not null,
+add foreign key (matricula_atendente) references atendente(matricula);
+
+alter table item_emprestimo #R7
+add isbn int not null ,
+add num_copia int not null,
+add foreign key (isbn, num_copia) references copia_titulo(isbn, num_copia); 
+
+CREATE TABLE devolucao_item ( #R8
+    numero_trans_devolucao int,
+    numero_trans_emprestimo int,          
+    numero_item int,                      
+    primary key (numero_trans_devolucao, numero_trans_emprestimo, numero_item),
+    foreign key (numero_trans_emprestimo, numero_item) references item_emprestimo(numero_trans, numero_item),
+    foreign key (numero_trans_devolucao) references devolucao(numero_trans)
+);
+
+create table aluno_curso ( #R16
+    codigo_usu int not null,
+    codigo_curso int not null,
+    matricula int not null check(matricula >= 1 and matricula<=99999),
+    primary key (codigo_usu, codigo_curso),
+    foreign key (codigo_usu) references usuario_biblioteca(codigo_usu),
+    foreign key (codigo_curso) references cursos(codigo)
+);
+
+alter table cursos #R17
+add codigo_unidade_academica varchar(4) not null,
+add foreign key (codigo_unidade_academica) references unidade_academica(codigo);
+
+create table professor_disciplina ( #R18    
+    codigo_usu int not null,
+    codigo_disciplina char(7) not null, 
+    primary key (codigo_usu, codigo_disciplina),
+    foreign key (codigo_usu) references usuario_professor(codigo_usu),
+    foreign key (codigo_disciplina) references disciplina(codigo)
+);
