@@ -2,7 +2,7 @@ create database biblioteca;
 use biblioteca;
 
 create table unidade_atendimento(
-	codigo int check(codigo >= 1 and codigo <= 999) not null,
+    codigo int check(codigo >= 1 and codigo <= 999) not null,
     nome varchar(50) not null unique,
     endereco varchar(200) not null,
     id_bibliotecaria int not null,
@@ -12,32 +12,32 @@ create table unidade_atendimento(
 );
 
 create table telefone_unidade_multi(
-	codigo int not null,
-    telefone int(10) not null unique check(telefone between 1000000000 and 9999999999),
-	foreign key (codigo) references unidade_atendimento(codigo),
+    codigo int not null,
+    telefone int(10) not null unique,
+    foreign key (codigo) references unidade_atendimento(codigo),
     primary key(codigo, telefone)
 );
 
 create table unidade_academica(
-	codigo varchar(4) not null,
+    codigo varchar(4) not null,
     nome varchar(50) not null unique,
     primary key(codigo)
 );
 
 create table cursos(
-	codigo int not null check(codigo >= 1 and codigo <= 999),
+    codigo int not null check(codigo >= 1 and codigo <= 999),
     nome varchar(50) not null unique,
     primary key(codigo)
 );
 
 create table disciplina(
-	codigo char(7) not null,
+    codigo char(7) not null,
     nome varchar(50) not null,
     primary key(codigo)
 );
 
 create table atendente(
-	matricula int not null check(matricula >= 1 and matricula <= 99999),
+    matricula int not null check(matricula >= 1 and matricula <= 99999),
     nome varchar(50) not null,
     codigo_unid int not null,
     foreign key(codigo_unid) references unidade_atendimento(codigo), #R3
@@ -45,13 +45,13 @@ create table atendente(
 );
 
 create table bibliotecaria(
-	matricula int not null check(matricula >= 1 and matricula <= 99999),
+    matricula int not null check(matricula >= 1 and matricula <= 99999),
     nome varchar(50) not null,
     primary key(matricula)
 );
 
 create table titulo(
-	isbn int not null check(isbn >= 1 and isbn <= 99999),
+    isbn int not null check(isbn >= 1 and isbn <= 99999),
     nomeTitulo varchar(100) not null,
     areaPrincip varchar(100) not null,
     assunto varchar(100) not null,
@@ -60,40 +60,45 @@ create table titulo(
     editora varchar(50) not null,
     idioma char(1) not null,
     prazo_emprestimo_prof int not null check(prazo_emprestimo_prof >= 1 and prazo_emprestimo_prof <= 99),
-    prazo_emprestimo_alun int not null check(prazo_emprestimo_alun >= 1 and prazo_emprestimo_alun <= 99),
+    prazo_emprestimo_alun int not null check(prazo_emprestimo_alun >= 1 and prazo_emprestimo-alun <= 99),
     num_max_renovacao int not null check(num_max_renovacao >= 0 and num_max_renovacao <= 99),
     primary key(isbn)
 );
 
+#Nicole
 create table titulo_livro(
-    isbn int not null check(isbn>=1 and isbn<=99999),
+    isbn int(5) not null,
     autor varchar(100) not null,
-    edicao int not null check(edicao>=1 and edicao<=999),
+    edicao int(3) not null check(edicao>=1),
     foreign key (isbn) references titulo(isbn),
     primary key (isbn)
 );
 
 create table titulo_periodico(
-    isbn int not null check(isbn>=1 and isbn<=99999),
+    isbn int not null,
     periodicidade varchar(15) not null check(periodicidade in('semanal', 'quinzenal', 'mensal', 'trimestral', 'quadrimestral', 'semestral', 'anual')),
     tipo char(1) not null check(tipo in('J','R','B')),
     foreign key (isbn) references titulo(isbn),
     primary key (isbn)
 );
+#fim Nicole
 
+#Marcos
 create table copia_titulo(
-	isbn int(5) not null,
+    isbn int(5) not null,
     num_copia int(5) not null,
     secao_copia int(4) not null,
     estante_copia int(3) not null,
     foreign key(isbn) references titulo(isbn), 
     primary key(isbn, num_copia)
 );
+#fim Marcos
 
+#Nicole
 create table usuario_biblioteca(
-    codigo_usu int primary key not null check(codigo_usu >=1 and codigo_usu<=99999),
+    codigo_usu int(5) primary key not null check(codigo_usu >=1 and codigo_usu<=99999),
     nome_usu varchar(50) not null,
-    identidade varchar(7) not null,
+    identidade varchar(7),
     cpf varchar(11) not null,
     endereco varchar(100) not null,
     sexo char(1) not null check(sexo in('M','F')),
@@ -102,14 +107,14 @@ create table usuario_biblioteca(
 );
 
 create table usuario_telefone(
-	codigo_usu int not null,
-    telefone int not null unique check(telefone between 1000000000 and 9999999999),
+    codigo_usu int not null,
+    telefone int(11) not null unique,
     primary key(codigo_usu, telefone),
-	foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
+    foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
 );
 
 create table usuario_aluno(
-    codigo_usu int primary key not null check(codigo_usu>=1 and codigo<=99999),
+    codigo_usu int primary key not null,
     foreign key (codigo_usu) references usuario_biblioteca(codigo_usu)
 );
 
@@ -159,16 +164,20 @@ create table renovacao(
 
 create table item_emprestimo(
     numero_trans int not null,
-    numero_item int not null check(numero_item>=1 and numero_item<=9),
+    numero_item int(1) not null check(numero_item>=1),
     data_limite_dev date not null,
     multa_atraso numeric(7,2),
     multa_dano numeric(7,2),
     primary key (numero_trans, numero_item),
     foreign key (numero_trans) references emprestimo(numero_trans) #R6
 );
+#fim Nicole
 
+
+#Relacionamentos
+#Marcos
 create table data_renova( #R9
-	data_renavacao date not null,
+    data_renavacao date not null,
     num_trans int,
     numero_trans int,
     num_item int,
@@ -178,7 +187,7 @@ create table data_renova( #R9
 );
 
 create table data_reserva( #R10
-	data_reserv date not null,
+    data_reserv date not null,
     numero_trans int,
     isbn int,
     num_copia int,
@@ -186,9 +195,11 @@ create table data_reserva( #R10
     foreign key(isbn, num_copia) references copia_titulo(isbn, num_copia),
     primary key(numero_trans, isbn, num_copia)
 );
+#Fim Marcose
 
+#Nicole
 alter table copia_titulo #R2
-add codigo int not null check(codigo>=1 and codigo<=999),
+add codigo int(3) not null,
 add foreign key (codigo) references unidade_atendimento(codigo);
 
 alter table transacao #R5
@@ -212,7 +223,7 @@ CREATE TABLE devolucao_item ( #R8
 create table aluno_curso ( #R16
     codigo_usu int not null,
     codigo_curso int not null,
-    matricula int not null check(matricula >= 1 and matricula<=99999),
+    matricula int not null check(matricula >= 1),
     primary key (codigo_usu, codigo_curso),
     foreign key (codigo_usu) references usuario_biblioteca(codigo_usu),
     foreign key (codigo_curso) references cursos(codigo)
@@ -229,3 +240,4 @@ create table professor_disciplina ( #R18
     foreign key (codigo_usu) references usuario_professor(codigo_usu),
     foreign key (codigo_disciplina) references disciplina(codigo)
 );
+#fimNicole
